@@ -1,0 +1,155 @@
+[
+  {
+    "source_index": 0,
+    "source": "水稻叶瘟病.png",
+    "model_id": "ricemaize_19cls_y11s_baseline_replaced_rice",
+    "model_short": "baseline",
+    "result_url": "/results/1782636526639_8db4b225_result.jpg",
+    "local_path": "figures/online_platform_tests/00_baseline.jpg",
+    "total": 2,
+    "stats": {
+      "rice_Leaf_Blast": 2
+    },
+    "inference_ms": 2766.0
+  },
+  {
+    "source_index": 0,
+    "source": "水稻叶瘟病.png",
+    "model_id": "ricemaize_19cls_y11s_msafe",
+    "model_short": "msafe",
+    "result_url": "/results/1782636530530_c4124489_result.jpg",
+    "local_path": "figures/online_platform_tests/00_msafe.jpg",
+    "total": 2,
+    "stats": {
+      "rice_Leaf_Blast": 2
+    },
+    "inference_ms": 672.57
+  },
+  {
+    "source_index": 1,
+    "source": "水稻白叶枯病.png",
+    "model_id": "ricemaize_19cls_y11s_baseline_replaced_rice",
+    "model_short": "baseline",
+    "result_url": "/results/1782636532177_4641a202_result.jpg",
+    "local_path": "figures/online_platform_tests/01_baseline.jpg",
+    "total": 1,
+    "stats": {
+      "rice_Bact_L_Blight": 1
+    },
+    "inference_ms": 608.12
+  },
+  {
+    "source_index": 1,
+    "source": "水稻白叶枯病.png",
+    "model_id": "ricemaize_19cls_y11s_msafe",
+    "model_short": "msafe",
+    "result_url": "/results/1782636533491_cd667b39_result.jpg",
+    "local_path": "figures/online_platform_tests/01_msafe.jpg",
+    "total": 2,
+    "stats": {
+      "rice_Bact_L_Blight": 2
+    },
+    "inference_ms": 437.21
+  },
+  {
+    "source_index": 2,
+    "source": "水稻铁甲虫.png",
+    "model_id": "ricemaize_19cls_y11s_baseline_replaced_rice",
+    "model_short": "baseline",
+    "result_url": "/results/1782636534716_e701bacf_result.jpg",
+    "local_path": "figures/online_platform_tests/02_baseline.jpg",
+    "total": 0,
+    "stats": {},
+    "inference_ms": 679.8
+  },
+  {
+    "source_index": 2,
+    "source": "水稻铁甲虫.png",
+    "model_id": "ricemaize_19cls_y11s_msafe",
+    "model_short": "msafe",
+    "result_url": "/results/1782636536066_2ebe25c7_result.jpg",
+    "local_path": "figures/online_platform_tests/02_msafe.jpg",
+    "total": 0,
+    "stats": {},
+    "inference_ms": 467.71
+  },
+  {
+    "source_index": 3,
+    "source": "玉米大斑病.png",
+    "model_id": "ricemaize_19cls_y11s_baseline_replaced_rice",
+    "model_short": "baseline",
+    "result_url": "/results/1782636537145_08dcd3c7_result.jpg",
+    "local_path": "figures/online_platform_tests/03_baseline.jpg",
+    "total": 2,
+    "stats": {
+      "maize_Blight": 2
+    },
+    "inference_ms": 686.74
+  },
+  {
+    "source_index": 3,
+    "source": "玉米大斑病.png",
+    "model_id": "ricemaize_19cls_y11s_msafe",
+    "model_short": "msafe",
+    "result_url": "/results/1782636538483_615294c8_result.jpg",
+    "local_path": "figures/online_platform_tests/03_msafe.jpg",
+    "total": 2,
+    "stats": {
+      "maize_Blight": 2
+    },
+    "inference_ms": 509.77
+  },
+  {
+    "source_index": 4,
+    "source": "玉米贪夜蛾（幼虫）.png",
+    "model_id": "ricemaize_19cls_y11s_baseline_replaced_rice",
+    "model_short": "baseline",
+    "result_url": "/results/1782636539706_6065bb0d_result.jpg",
+    "local_path": "figures/online_platform_tests/04_baseline.jpg",
+    "total": 1,
+    "stats": {
+      "maize_fall-armyworm-larva": 1
+    },
+    "inference_ms": 651.83
+  },
+  {
+    "source_index": 4,
+    "source": "玉米贪夜蛾（幼虫）.png",
+    "model_id": "ricemaize_19cls_y11s_msafe",
+    "model_short": "msafe",
+    "result_url": "/results/1782636541002_2c2e7b84_result.jpg",
+    "local_path": "figures/online_platform_tests/04_msafe.jpg",
+    "total": 4,
+    "stats": {
+      "maize_fall-armyworm-larva": 1,
+      "rice_Brn_Spot": 3
+    },
+    "inference_ms": 494.81
+  },
+  {
+    "source_index": 5,
+    "source": "玉米黑粉病.png",
+    "model_id": "ricemaize_19cls_y11s_baseline_replaced_rice",
+    "model_short": "baseline",
+    "result_url": "/results/1782636542182_89f6cf0b_result.jpg",
+    "local_path": "figures/online_platform_tests/05_baseline.jpg",
+    "total": 1,
+    "stats": {
+      "maize_corn_smut": 1
+    },
+    "inference_ms": 628.02
+  },
+  {
+    "source_index": 5,
+    "source": "玉米黑粉病.png",
+    "model_id": "ricemaize_19cls_y11s_msafe",
+    "model_short": "msafe",
+    "result_url": "/results/1782636543644_3e862763_result.jpg",
+    "local_path": "figures/online_platform_tests/05_msafe.jpg",
+    "total": 1,
+    "stats": {
+      "maize_corn_smut": 1
+    },
+    "inference_ms": 513.19
+  }
+]
