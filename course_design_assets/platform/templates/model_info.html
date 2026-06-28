@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>模型信息展示</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { margin: 0; font-family: "Microsoft YaHei", Arial, sans-serif; background: #f2f5f3; color: #1f2d1f; }
+    .layout { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+    .sidebar {
+      background: #f4f8f4;
+      border-right: 1px solid #dfe8df;
+      padding: 12px 10px;
+    }
+    .brand { font-size: 15px; font-weight: 700; color: #2f6b4d; padding: 10px 10px 14px; }
+    .menu-group { margin-bottom: 10px; }
+    .menu-item {
+      display: block;
+      padding: 10px 12px;
+      margin: 4px 0;
+      border-radius: 8px;
+      color: #4d6554;
+      text-decoration: none;
+      font-size: 13px;
+    }
+    .menu-item:hover { background: #e7f1ea; color: #2f6b4d; }
+    .menu-item.active { background: #ddefe4; color: #2f6b4d; font-weight: 700; }
+    .main { min-width: 0; }
+    .top { height: 56px; background: #2f6b4d; border-bottom: 1px solid #2f6b4d; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
+    .top a { color: #fff; text-decoration: none; }
+    .wrap { padding: 14px; }
+    .card { background: #fff; border: 1px solid #dfe8df; border-radius: 10px; box-shadow: 0 2px 8px rgba(38, 76, 55, 0.08); margin-bottom: 12px; }
+    .card-title { padding: 12px 14px; font-weight: 700; border-bottom: 1px solid #edf3ed; color: #2f6b4d; }
+    .toolbar { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; }
+    select { border: 1px solid #d1dfd1; border-radius: 8px; padding: 8px 10px; min-width: 220px; }
+    .table-wrap { overflow: auto; padding: 0 12px 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 980px; }
+    th, td { border-bottom: 1px solid #eef3ee; padding: 9px 8px; text-align: left; }
+    th { background: #f6faf6; color: #3f5f3f; position: sticky; top: 0; }
+    .metrics { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 12px; }
+    .metric { background: #fbfdfb; border: 1px solid #e4ece4; border-radius: 10px; padding: 12px; }
+    .metric .k { font-size: 12px; color: #748674; margin-bottom: 6px; }
+    .metric .v { font-size: 30px; font-weight: 800; color: #1f5f3f; }
+    .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 12px; }
+    .chart-box { border: 1px solid #e4ece4; border-radius: 10px; padding: 10px; background: #fff; }
+    .chart-title { font-size: 13px; font-weight: 700; color: #2f6b4d; margin-bottom: 8px; }
+    canvas { width: 100% !important; height: 280px !important; }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">菜单</div>
+      <div class="menu-group">
+        <a class="menu-item" href="/drone-decision">无人机决策</a>
+        <a class="menu-item" href="/">首页</a>
+        <a class="menu-item" href="/">病害检测</a>
+        <a class="menu-item" href="/profile">个人中心</a>
+        <a class="menu-item active" href="/model-info">模型信息</a>
+      </div>
+    </aside>
+    <main class="main">
+      <div class="top">
+        <div>模型信息展示</div>
+        <div><a href="/">返回识别平台</a></div>
+      </div>
+      <div class="wrap">
+        <section class="card">
+          <div class="toolbar">
+            <div>模型对比指标</div>
+            <select id="modelSelect"></select>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>模型</th><th>Box P</th><th>Box R</th><th>Box mAP50</th><th>Box mAP50-95</th>
+                  <th>Mask P</th><th>Mask R</th><th>Mask mAP50</th><th>Mask mAP50-95</th>
+                </tr>
+              </thead>
+              <tbody id="metricsTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-title">当前模型</div>
+          <div class="metrics">
+            <div class="metric"><div class="k">Box mAP50</div><div class="v" id="boxMap50">0%</div></div>
+            <div class="metric"><div class="k">训练轮次</div><div class="v" id="epochsVal">0</div></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-title">训练曲线</div>
+          <div class="charts">
+            <div class="chart-box">
+              <div class="chart-title">mAP50 曲线</div>
+              <canvas id="mapChart"></canvas>
+            </div>
+            <div class="chart-box">
+              <div class="chart-title">损失函数曲线</div>
+              <canvas id="lossChart"></canvas>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const modelSelect = document.getElementById("modelSelect");
+    const metricsTable = document.getElementById("metricsTable");
+    let mapChart = null;
+    let lossChart = null;
+    const cache = {};
+
+    function fmt(v) { return `${(Number(v || 0) * 100).toFixed(1)}%`; }
+
+    async function loadModels() {
+      const r = await fetch("/api/models");
+      const d = await r.json();
+      if (!r.ok || !d.ok) return;
+      modelSelect.innerHTML = "";
+      (d.models || []).forEach((m) => {
+        const op = document.createElement("option");
+        op.value = m.model_id;
+        op.textContent = m.model_label;
+        modelSelect.appendChild(op);
+      });
+      if (d.default) modelSelect.value = d.default;
+      await renderAllRows();
+      await loadOne(modelSelect.value);
+    }
+
+    async function fetchInfo(modelId) {
+      if (cache[modelId]) return cache[modelId];
+      const r = await fetch(`/api/model-info?model_id=${encodeURIComponent(modelId)}`);
+      const d = await r.json();
+      if (!r.ok || !d.ok) throw new Error(d.message || "读取失败");
+      cache[modelId] = d.info;
+      return d.info;
+    }
+
+    async function renderAllRows() {
+      const ids = Array.from(modelSelect.options).map(o => o.value);
+      const rows = await Promise.all(ids.map(async (id) => {
+        try { return await fetchInfo(id); } catch { return null; }
+      }));
+      metricsTable.innerHTML = rows.filter(Boolean).map((info) => {
+        const b = info.best || {};
+        return `<tr>
+          <td>${info.model_id}</td>
+          <td>${b.box_p ?? 0}</td><td>${b.box_r ?? 0}</td>
+          <td>${b.box_map50 ?? 0}</td><td>${b.box_map50_95 ?? 0}</td>
+          <td>${b.mask_p ?? 0}</td><td>${b.mask_r ?? 0}</td>
+          <td>${b.mask_map50 ?? 0}</td><td>${b.mask_map50_95 ?? 0}</td>
+        </tr>`;
+      }).join("");
+    }
+
+    async function loadOne(modelId) {
+      const info = await fetchInfo(modelId);
+      const b = info.best || {};
+      document.getElementById("boxMap50").textContent = fmt(b.box_map50);
+      document.getElementById("epochsVal").textContent = info.epochs ?? 0;
+
+      const c = info.curves || {};
+      const labels = c.epochs || [];
+
+      if (mapChart) mapChart.destroy();
+      mapChart = new Chart(document.getElementById("mapChart"), {
+        type: "line",
+        data: {
+          labels,
+          datasets: [
+            { label: "Box mAP50", data: c.box_map50 || [], borderColor: "#3c7be6", fill: false, tension: 0.2 },
+            { label: "Mask mAP50", data: c.mask_map50 || [], borderColor: "#6c7a89", fill: false, tension: 0.2 },
+          ],
+        },
+        options: { responsive: true, maintainAspectRatio: false },
+      });
+
+      if (lossChart) lossChart.destroy();
+      lossChart = new Chart(document.getElementById("lossChart"), {
+        type: "line",
+        data: {
+          labels,
+          datasets: [
+            { label: "Train Box Loss", data: c.train_box_loss || [], borderColor: "#d35454", fill: false, tension: 0.2 },
+            { label: "Train Seg Loss", data: c.train_seg_loss || [], borderColor: "#e3913d", fill: false, tension: 0.2 },
+            { label: "Val Box Loss", data: c.val_box_loss || [], borderColor: "#2f9b6b", fill: false, tension: 0.2 },
+            { label: "Val Seg Loss", data: c.val_seg_loss || [], borderColor: "#4f7fff", fill: false, tension: 0.2 },
+          ],
+        },
+        options: { responsive: true, maintainAspectRatio: false },
+      });
+    }
+
+    modelSelect.addEventListener("change", async () => {
+      await loadOne(modelSelect.value);
+    });
+
+    loadModels();
+  </script>
+</body>
+</html>

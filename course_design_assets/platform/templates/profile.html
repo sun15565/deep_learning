@@ -1,0 +1,131 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>个人中心</title>
+  <style>
+    body { margin: 0; font-family: "Microsoft YaHei", Arial, sans-serif; background: #f3f7f4; color: #223022; }
+    .layout { display: grid; grid-template-columns: 190px 1fr; min-height: 100vh; }
+    .sidebar { background: #f4f8f4; border-right: 1px solid #dfe8df; padding: 12px 10px; }
+    .menu-title { color: #2f6b4d; font-weight: 700; font-size: 14px; padding: 8px 10px; }
+    .menu-item { display: block; padding: 10px 12px; margin: 5px 0; border-radius: 8px; color: #4d6554; text-decoration: none; font-size: 13px; }
+    .menu-item:hover { background: #e7f1ea; color: #2f6b4d; }
+    .menu-item.active { background: #ddefe4; color: #2f6b4d; font-weight: 700; }
+    .main { min-width: 0; }
+    .top { height: 56px; background: #2f6b4d; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
+    .top a { color: #fff; text-decoration: none; }
+    .wrap { max-width: 920px; margin: 20px auto; padding: 0 12px; display: grid; grid-template-columns: 320px 1fr; gap: 14px; }
+    .card { background: #fff; border: 1px solid #dbe7dc; border-radius: 10px; padding: 16px; }
+    .title { margin: 0 0 12px; color: #2f6b4d; }
+    .avatar { width: 140px; height: 140px; border-radius: 50%; object-fit: cover; border: 1px solid #dbe7dc; background: #f8fbf8; }
+    .input { width: 100%; border: 1px solid #d2dfd3; border-radius: 8px; padding: 9px 10px; margin-bottom: 10px; }
+    .btn { width: 100%; border: none; border-radius: 8px; background: #2f8a52; color: #fff; padding: 10px 0; font-weight: 700; cursor: pointer; }
+    .msg { min-height: 20px; font-size: 13px; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <a class="menu-item" href="/drone-decision">无人机决策</a>
+      <div class="menu-title">菜单</div>
+      <a class="menu-item" href="/">病害检测</a>
+      <a class="menu-item" href="/model-info">模型信息</a>
+      <a class="menu-item active" href="/profile">个人中心</a>
+      <a class="menu-item" href="/reset-password">重置密码</a>
+    </aside>
+    <main class="main">
+      <div class="top">
+        <div>个人中心</div>
+        <div><a href="/">返回识别平台</a></div>
+      </div>
+  <div class="wrap">
+    <section class="card">
+      <h3 class="title">头像设置</h3>
+      <img id="avatarImg" class="avatar" alt="头像">
+      <div style="height:10px;"></div>
+      <input id="avatarFile" class="input" type="file" accept="image/*">
+      <button id="avatarBtn" class="btn">上传头像</button>
+      <div id="avatarMsg" class="msg"></div>
+    </section>
+
+    <section class="card">
+      <h3 class="title">账号信息</h3>
+      <div id="basicInfo"></div>
+      <hr style="border:none;border-top:1px solid #edf3ee;margin:14px 0;">
+      <h3 class="title">修改密码</h3>
+      <input id="oldPassword" class="input" type="password" placeholder="旧密码">
+      <input id="newPassword" class="input" type="password" placeholder="新密码（至少6位）">
+      <button id="pwdBtn" class="btn">修改密码</button>
+      <div id="pwdMsg" class="msg"></div>
+    </section>
+  </div>
+    </main>
+  </div>
+
+  <script>
+    const basicInfo = document.getElementById("basicInfo");
+    const avatarImg = document.getElementById("avatarImg");
+    const avatarMsg = document.getElementById("avatarMsg");
+    const pwdMsg = document.getElementById("pwdMsg");
+
+    async function loadMe() {
+      const res = await fetch("/api/me");
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        window.location.href = "/login";
+        return;
+      }
+      const u = data.user;
+      basicInfo.innerHTML = `用户名：${u.username}<br>注册时间：${new Date((u.created_at || 0) * 1000).toLocaleString()}`;
+      avatarImg.src = u.avatar_url ? `${u.avatar_url}?t=${Date.now()}` : "https://dummyimage.com/140x140/e8efe8/7a8b7a&text=Avatar";
+    }
+
+    document.getElementById("avatarBtn").addEventListener("click", async () => {
+      const file = document.getElementById("avatarFile").files[0];
+      avatarMsg.style.color = "#c62828";
+      if (!file) {
+        avatarMsg.textContent = "请先选择头像图片";
+        return;
+      }
+      const form = new FormData();
+      form.append("avatar", file);
+      const res = await fetch("/api/me/avatar", { method: "POST", body: form });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        avatarMsg.textContent = data.message || "上传失败";
+        return;
+      }
+      avatarMsg.style.color = "#1f7f3f";
+      avatarMsg.textContent = "头像更新成功";
+      avatarImg.src = `${data.avatar_url}?t=${Date.now()}`;
+    });
+
+    document.getElementById("pwdBtn").addEventListener("click", async () => {
+      const old_password = document.getElementById("oldPassword").value.trim();
+      const new_password = document.getElementById("newPassword").value.trim();
+      pwdMsg.style.color = "#c62828";
+      if (!old_password || !new_password) {
+        pwdMsg.textContent = "请填写完整密码信息";
+        return;
+      }
+      const res = await fetch("/api/me/password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ old_password, new_password }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        pwdMsg.textContent = data.message || "修改失败";
+        return;
+      }
+      pwdMsg.style.color = "#1f7f3f";
+      pwdMsg.textContent = "密码修改成功";
+      document.getElementById("oldPassword").value = "";
+      document.getElementById("newPassword").value = "";
+    });
+
+    loadMe();
+  </script>
+</body>
+</html>

@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>农业病虫害识别系统</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", Arial, sans-serif;
+      background: #f2f5f3;
+      color: #1f2d1f;
+    }
+    .topbar {
+      height: 56px;
+      background: #2f6b4d;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      font-size: 14px;
+    }
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid rgba(255,255,255,.5);
+      background: rgba(255,255,255,.2);
+    }
+    .logout-btn {
+      border: 1px solid rgba(255,255,255,.4);
+      background: transparent;
+      color: #fff;
+      border-radius: 6px;
+      padding: 6px 10px;
+      cursor: pointer;
+    }
+    .brand {
+      font-weight: 700;
+      letter-spacing: 0.4px;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 190px 1fr;
+      min-height: calc(100vh - 56px);
+    }
+    .sidebar {
+      background: #f4f8f4;
+      border-right: 1px solid #dfe8df;
+      padding: 12px 10px;
+    }
+    .menu-title { color: #2f6b4d; font-weight: 700; font-size: 14px; padding: 8px 10px; }
+    .menu-item {
+      display: block;
+      padding: 10px 12px;
+      margin: 5px 0;
+      border-radius: 8px;
+      color: #4d6554;
+      text-decoration: none;
+      font-size: 13px;
+    }
+    .menu-item:hover { background: #e7f1ea; color: #2f6b4d; }
+    .menu-item.active { background: #ddefe4; color: #2f6b4d; font-weight: 700; }
+    .main {
+      display: grid;
+      grid-template-columns: 260px 1fr 300px;
+      gap: 12px;
+      padding: 12px;
+      min-height: calc(100vh - 56px);
+    }
+    .panel {
+      background: #fff;
+      border: 1px solid #dfe8df;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(38, 76, 55, 0.08);
+    }
+    .panel-title {
+      font-size: 14px;
+      font-weight: 700;
+      padding: 12px 14px;
+      border-bottom: 1px solid #edf3ed;
+      color: #2f6b4d;
+    }
+    .left {
+      padding-bottom: 10px;
+    }
+    .left .section {
+      padding: 10px 14px;
+      border-bottom: 1px solid #f1f5f1;
+    }
+    .label {
+      display: block;
+      font-size: 12px;
+      color: #647764;
+      margin-bottom: 6px;
+    }
+    .input, .select, .btn {
+      width: 100%;
+      border: 1px solid #d1dfd1;
+      border-radius: 8px;
+      padding: 9px 10px;
+      font-size: 13px;
+      background: #fff;
+    }
+    .input[type="number"] { padding-right: 6px; }
+    .btn {
+      background: #2f8a52;
+      color: #fff;
+      border: none;
+      font-weight: 700;
+      cursor: pointer;
+      transition: .2s;
+      margin-top: 8px;
+    }
+    .btn:hover { background: #297748; }
+    .middle {
+      display: grid;
+      grid-template-rows: minmax(360px, 64vh) 170px;
+      gap: 12px;
+      min-height: 0;
+    }
+    .viewer {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f9fbf9;
+      border-radius: 10px;
+      overflow: hidden;
+      min-height: 360px;
+      padding: 10px;
+    }
+    .viewer img {
+      width: auto;
+      height: auto;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      background: #fff;
+      border-radius: 8px;
+    }
+    .hidden-image {
+      display: none;
+    }
+    .placeholder {
+      position: absolute;
+      color: #7a8d7a;
+      font-size: 14px;
+      text-align: center;
+      pointer-events: none;
+    }
+    .result-box {
+      padding: 10px;
+    }
+    .compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      height: 100%;
+    }
+    .mini {
+      border: 1px solid #e4ece4;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+    }
+    .mini h4 {
+      margin: 0;
+      padding: 8px 10px;
+      font-size: 12px;
+      border-bottom: 1px solid #eef3ee;
+      color: #2f6b4d;
+      background: #f8fbf8;
+    }
+    .mini img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #fff;
+    }
+    .right-content {
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      height: calc(100% - 45px);
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .metric {
+      border: 1px solid #e4ece4;
+      border-radius: 8px;
+      padding: 8px;
+      background: #fbfdfb;
+    }
+    .metric .k {
+      font-size: 11px;
+      color: #748674;
+      margin-bottom: 4px;
+    }
+    .metric .v {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1f5f3f;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      background: #fff;
+      border: 1px solid #e6eee6;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th, td {
+      border-bottom: 1px solid #eef3ee;
+      padding: 8px 6px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #f6faf6; color: #3f5f3f; }
+    td:first-child {
+      max-width: 110px;
+      word-break: break-word;
+    }
+    .output {
+      flex: 1;
+      min-height: 140px;
+      background: #f7fbf8;
+      color: #2b3a2f;
+      border: 1px solid #dfeadf;
+      border-radius: 8px;
+      margin: 0;
+      padding: 10px;
+      overflow: auto;
+      font-size: 12px;
+      line-height: 1.5;
+      font-family: "Consolas", "Courier New", monospace;
+    }
+    @media (max-width: 1360px) {
+      .main { grid-template-columns: 240px 1fr; }
+      .right { grid-column: 1 / -1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">农业病虫害智能识别系统</div>
+    <div class="topbar-right">
+      <img id="userAvatar" class="avatar" alt="头像">
+      <button id="logoutBtn" class="logout-btn">退出登录</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <a class="menu-item" href="/drone-decision">无人机决策</a>
+      <div class="menu-title">菜单</div>
+      <a class="menu-item active" href="/">病害检测</a>
+      <a class="menu-item" href="/model-info">模型信息</a>
+      <a class="menu-item" href="/profile">个人中心</a>
+      <a class="menu-item" href="/reset-password">重置密码</a>
+    </aside>
+  <div class="main">
+    <aside class="panel left">
+      <div class="panel-title">模型接入</div>
+      <div class="section">
+        <label class="label" for="modelSelect">选择模型</label>
+        <select id="modelSelect" class="select"></select>
+      </div>
+      <div class="section">
+        <label class="label" for="imageFile">选择图片文件</label>
+        <input id="imageFile" class="input" type="file" accept="image/*">
+      </div>
+      <div class="section">
+        <label class="label" for="confInput">置信度阈值 (conf)</label>
+        <input id="confInput" class="input" type="number" value="0.25" step="0.01" min="0.01" max="0.99">
+      </div>
+      <div class="section">
+        <label class="label" for="iouInput">IoU 阈值</label>
+        <input id="iouInput" class="input" type="number" value="0.45" step="0.01" min="0.01" max="0.99">
+        <button id="detectBtn" class="btn">开始检测</button>
+      </div>
+    </aside>
+
+    <section class="middle">
+      <div class="panel viewer">
+        <img id="resultImg" alt="识别结果图" class="hidden-image">
+        <div id="viewerPlaceholder" class="placeholder">请选择图片并点击“开始检测”</div>
+      </div>
+      <div class="panel result-box">
+        <div class="compare">
+          <div class="mini">
+            <h4>原始图片</h4>
+            <img id="originImg" alt="原图" class="hidden-image">
+          </div>
+          <div class="mini">
+            <h4>检测结果缩略图</h4>
+            <img id="resultMiniImg" alt="检测图" class="hidden-image">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel right">
+      <div class="panel-title">检测结果详情</div>
+      <div class="right-content">
+        <div class="metrics">
+          <div class="metric"><div class="k">检出总数</div><div class="v" id="totalMetric">0</div></div>
+          <div class="metric"><div class="k">推理耗时</div><div class="v" id="msMetric">0 ms</div></div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 26%;">类别</th>
+              <th style="width: 16%;">数量</th>
+              <th style="width: 20%;">置信度</th>
+              <th>框坐标</th>
+            </tr>
+          </thead>
+          <tbody id="resultTableBody">
+            <tr><td colspan="4">暂无检测数据</td></tr>
+          </tbody>
+        </table>
+        <pre id="output" class="output">等待检测...</pre>
+      </div>
+    </aside>
+  </div></div>
+
+  <script>
+    const modelSelect = document.getElementById("modelSelect");
+    const detectBtn = document.getElementById("detectBtn");
+    const output = document.getElementById("output");
+    const resultTableBody = document.getElementById("resultTableBody");
+    const totalMetric = document.getElementById("totalMetric");
+    const msMetric = document.getElementById("msMetric");
+    const viewerPlaceholder = document.getElementById("viewerPlaceholder");
+    const resultImg = document.getElementById("resultImg");
+    const originImg = document.getElementById("originImg");
+    const resultMiniImg = document.getElementById("resultMiniImg");
+    const userAvatar = document.getElementById("userAvatar");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    async function loadMe() {
+      const res = await fetch("/api/me");
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        window.location.href = "/login";
+        return;
+      }
+      userAvatar.src = data.user.avatar_url
+        ? `${data.user.avatar_url}?t=${Date.now()}`
+        : "https://dummyimage.com/64x64/e8efe8/7a8b7a&text=A";
+    }
+
+    function renderDetectionTable(detections) {
+      if (!detections || detections.length === 0) {
+        resultTableBody.innerHTML = "<tr><td colspan='4'>未检测到目标</td></tr>";
+        return;
+      }
+      const summary = {};
+      detections.forEach((d) => {
+        const key = d.class_name_zh || d.class_name_en || "-";
+        if (!summary[key]) {
+          summary[key] = { count: 0, maxConf: 0, bbox: "-" };
+        }
+        summary[key].count += 1;
+        summary[key].maxConf = Math.max(summary[key].maxConf, Number(d.confidence || 0));
+        if (summary[key].bbox === "-" && Array.isArray(d.bbox_xyxy)) {
+          summary[key].bbox = d.bbox_xyxy.map((v) => Number(v).toFixed(0)).join(", ");
+        }
+      });
+
+      resultTableBody.innerHTML = Object.entries(summary).map(([name, item]) => `
+        <tr>
+          <td title="${name}">${name}</td>
+          <td>${item.count}</td>
+          <td>${(item.maxConf * 100).toFixed(1)}%</td>
+          <td>${item.bbox}</td>
+        </tr>
+      `).join("");
+    }
+
+    async function loadModels() {
+      const res = await fetch("/api/models");
+      const data = await res.json();
+      modelSelect.innerHTML = "";
+      (data.models || []).forEach((m) => {
+        const op = document.createElement("option");
+        op.value = m.model_id;
+        op.textContent = m.model_label;
+        modelSelect.appendChild(op);
+      });
+      if (data.default) modelSelect.value = data.default;
+    }
+
+    detectBtn.addEventListener("click", async () => {
+      const file = document.getElementById("imageFile").files[0];
+      const conf = document.getElementById("confInput").value;
+      const iou = document.getElementById("iouInput").value;
+
+      if (!file) {
+        alert("请先选择图片文件");
+        return;
+      }
+
+      const form = new FormData();
+      form.append("image", file);
+      form.append("model_id", modelSelect.value);
+      form.append("conf", conf);
+      form.append("iou", iou);
+
+      output.textContent = "识别中...";
+      resultTableBody.innerHTML = "<tr><td colspan='4'>识别中...</td></tr>";
+      const res = await fetch("/api/detect", { method: "POST", body: form });
+      const data = await res.json();
+
+      if (!res.ok || !data.ok) {
+        output.textContent = JSON.stringify(data, null, 2);
+        resultTableBody.innerHTML = "<tr><td colspan='4'>请求失败</td></tr>";
+        return;
+      }
+
+      const ts = Date.now();
+      originImg.src = data.original_url + "?t=" + ts;
+      resultImg.src = data.result_url + "?t=" + ts;
+      resultMiniImg.src = data.result_url + "?t=" + ts;
+      originImg.classList.remove("hidden-image");
+      resultImg.classList.remove("hidden-image");
+      resultMiniImg.classList.remove("hidden-image");
+      viewerPlaceholder.style.display = "none";
+
+      totalMetric.textContent = data.total ?? 0;
+      msMetric.textContent = `${data.inference_ms ?? 0} ms`;
+      renderDetectionTable(data.detections || []);
+      output.textContent = JSON.stringify(data, null, 2);
+    });
+
+    logoutBtn.addEventListener("click", async () => {
+      await fetch("/api/logout", { method: "POST" });
+      window.location.href = "/login";
+    });
+
+    loadMe();
+    loadModels();
+  </script>
+</body>
+</html>

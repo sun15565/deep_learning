@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>无人机变量喷洒决策平台</title>
+  <style>
+    * { box-sizing: border-box; }
+    :root {
+      --green: #236846;
+      --green-2: #2f8a52;
+      --line: #dfe8df;
+      --soft: #f4f8f4;
+      --text: #1f2d1f;
+      --muted: #637363;
+      --panel: #ffffff;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Microsoft YaHei", Arial, sans-serif;
+      background: #eef3f0;
+      color: var(--text);
+    }
+    .app {
+      display: grid;
+      grid-template-columns: 176px 1fr;
+      min-height: 100vh;
+    }
+    .sidebar {
+      background: #f7faf7;
+      border-right: 1px solid var(--line);
+      padding: 16px 10px;
+    }
+    .side-title {
+      color: var(--green);
+      font-size: 14px;
+      font-weight: 800;
+      padding: 0 10px 12px;
+    }
+    .menu-item {
+      display: block;
+      padding: 11px 12px;
+      margin: 5px 0;
+      border-radius: 8px;
+      color: #4d6554;
+      text-decoration: none;
+      font-size: 13px;
+    }
+    .menu-item:hover,
+    .menu-item.active {
+      background: #ddefe4;
+      color: var(--green);
+      font-weight: 700;
+    }
+    .page {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+    .header {
+      height: 64px;
+      background: var(--green);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 22px;
+      border-bottom: 1px solid rgba(255,255,255,.16);
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+    .header a {
+      color: #fff;
+      text-decoration: none;
+      font-size: 13px;
+      border: 1px solid rgba(255,255,255,.35);
+      border-radius: 8px;
+      padding: 7px 10px;
+    }
+    .dashboard {
+      display: grid;
+      grid-template-columns: minmax(640px, 1fr) 360px;
+      grid-template-rows: auto 1fr;
+      gap: 12px;
+      padding: 12px;
+      min-width: 0;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(38, 76, 55, 0.07);
+      overflow: hidden;
+      min-width: 0;
+    }
+    .panel-head {
+      min-height: 46px;
+      padding: 12px 14px;
+      border-bottom: 1px solid #edf3ed;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--green);
+      font-size: 14px;
+      font-weight: 800;
+    }
+    .btn {
+      border: none;
+      border-radius: 8px;
+      background: var(--green-2);
+      color: #fff;
+      padding: 8px 12px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn:disabled { opacity: .65; cursor: wait; }
+    .overview {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(8, minmax(110px, 1fr));
+      gap: 10px;
+    }
+    .metric {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 11px 12px;
+      min-height: 78px;
+      box-shadow: 0 2px 8px rgba(38, 76, 55, 0.05);
+    }
+    .metric .k {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 7px;
+      line-height: 1.25;
+    }
+    .metric .v {
+      color: #145835;
+      font-size: 22px;
+      font-weight: 900;
+      line-height: 1.1;
+      word-break: break-word;
+    }
+    .map-panel {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      min-height: 680px;
+    }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      padding: 10px 12px;
+      border-bottom: 1px solid #edf3ed;
+      overflow-x: auto;
+    }
+    .tab {
+      border: 1px solid #cfdfd2;
+      background: #fff;
+      color: #315f42;
+      border-radius: 8px;
+      padding: 8px 12px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .tab.active {
+      background: #ddefe4;
+      font-weight: 800;
+    }
+    .image-view {
+      min-height: 590px;
+      display: grid;
+      place-items: center;
+      padding: 14px;
+      background: #f8fbf8;
+    }
+    .image-view img {
+      max-width: 100%;
+      max-height: 74vh;
+      object-fit: contain;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+    .side-stack {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+    .content {
+      padding: 12px;
+    }
+    .status {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+      margin-bottom: 10px;
+    }
+    .method {
+      display: grid;
+      gap: 8px;
+    }
+    .method-step {
+      border: 1px solid #e4ece4;
+      background: #fbfdfb;
+      border-radius: 8px;
+      padding: 10px;
+    }
+    .method-step .k {
+      color: var(--green);
+      font-size: 13px;
+      font-weight: 800;
+      margin-bottom: 5px;
+    }
+    .method-step .v {
+      color: #5f725f;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+    .data-grid {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 1fr;
+      gap: 12px;
+    }
+    .scroll {
+      max-height: 270px;
+      overflow: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    th, td {
+      border-bottom: 1px solid #eef3ee;
+      padding: 8px 9px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #f6faf6;
+      color: #3f5f3f;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    .history-item {
+      border: 1px solid #e4ece4;
+      border-radius: 8px;
+      padding: 10px;
+      background: #fbfdfb;
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+    .history-item:hover { background: #f2f8f3; }
+    .history-item .name {
+      color: var(--green);
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+    .history-item .meta {
+      color: #657965;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+    @media (max-width: 1380px) {
+      .overview { grid-template-columns: repeat(4, minmax(120px, 1fr)); }
+      .dashboard { grid-template-columns: 1fr; }
+      .data-grid { grid-template-columns: 1fr; }
+      .map-panel { min-height: 560px; }
+    }
+    @media (max-width: 860px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar { display: flex; gap: 6px; overflow-x: auto; padding: 8px; }
+      .side-title { display: none; }
+      .header { height: auto; min-height: 58px; align-items: flex-start; flex-direction: column; padding: 12px; }
+      .overview { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="side-title">功能菜单</div>
+      <a class="menu-item" href="/">病虫害识别</a>
+      <a class="menu-item active" href="/drone-decision">无人机决策</a>
+      <a class="menu-item" href="/model-info">模型信息</a>
+      <a class="menu-item" href="/profile">个人中心</a>
+      <a class="menu-item" href="/reset-password">修改密码</a>
+    </aside>
+
+    <section class="page">
+      <header class="header">
+        <h1>无人机变量喷洒决策平台</h1>
+        <a href="/">返回识别平台</a>
+      </header>
+
+      <main class="dashboard">
+        <section class="overview" id="summaryBox"></section>
+
+        <section class="panel map-panel">
+          <div class="panel-head">
+            <span>农田建模、风险分区与作业路径</span>
+            <span id="sourceName" class="status"></span>
+          </div>
+          <div class="tabs" id="imageTabs"></div>
+          <div class="image-view">
+            <img id="mainImage" alt="无人机决策图">
+          </div>
+        </section>
+
+        <aside class="side-stack">
+          <section class="panel">
+            <div class="panel-head">
+              <span>决策方法</span>
+              <button id="saveBtn" class="btn">保存方案</button>
+            </div>
+            <div class="content">
+              <div id="status" class="status">正在读取 2026 文件夹中的无人机结果...</div>
+              <div class="method" id="methodBox"></div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head">平台保存记录</div>
+            <div class="content" id="historyBox"></div>
+          </section>
+        </aside>
+
+        <section class="data-grid">
+          <section class="panel">
+            <div class="panel-head">病害任务点优先级</div>
+            <div class="scroll">
+              <table>
+                <thead><tr><th>排名</th><th>任务</th><th>地块</th><th>风险</th><th>置信度</th><th>药量 L/ha</th></tr></thead>
+                <tbody id="taskBody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head">无人机任务分配</div>
+            <div class="scroll">
+              <table>
+                <thead><tr><th>无人机</th><th>任务数</th><th>航线 m</th><th>任务顺序</th></tr></thead>
+                <tbody id="routeBody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head">地块风险样例</div>
+            <div class="scroll">
+              <table>
+                <thead><tr><th>地块</th><th>面积 m²</th><th>视觉</th><th>总风险</th><th>等级</th></tr></thead>
+                <tbody id="parcelBody"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+      </main>
+    </section>
+  </div>
+
+  <script>
+    function fmt(v, digits = 2) {
+      const n = Number(v);
+      return Number.isFinite(n) ? n.toFixed(digits) : (v ?? "-");
+    }
+
+    function methodLabel(key) {
+      return ({
+        farmland_model: "农田空间建模",
+        risk_model: "风险融合模型",
+        task_model: "病害任务生成",
+        route_model: "无人机路径与喷洒",
+      })[key] || key;
+    }
+
+    function renderMethod(plan) {
+      methodBox.innerHTML = Object.entries(plan.method || {}).map(([k, v]) => `
+        <div class="method-step">
+          <div class="k">${methodLabel(k)}</div>
+          <div class="v">${v}</div>
+        </div>
+      `).join("");
+    }
+
+    function renderSummary(plan) {
+      const s = plan.summary || {};
+      const rows = [
+        ["农田地块", s["农田地块数"], "块"],
+        ["病害任务区", s["病害任务区数"], "个"],
+        ["农田面积", fmt(s["农田面积(m²)"], 0), "m²"],
+        ["核心病害面积", fmt(s["病害核心面积(m²)"], 0), "m²"],
+        ["巡查航线", fmt(s["区域间巡查航线长度(m)"], 1), "m"],
+        ["喷洒航线", fmt(s["实际喷洒航线长度(m)"], 1), "m"],
+        ["变量喷洒药量", fmt(s["触发式变量喷洒药量(L)"], 1), "L"],
+        ["节药比例", s["估算节药比例"], ""],
+      ];
+      summaryBox.innerHTML = rows.map(([k, v, unit]) => `
+        <div class="metric">
+          <div class="k">${k}</div>
+          <div class="v">${v}${unit ? " " + unit : ""}</div>
+        </div>
+      `).join("");
+    }
+
+    function imageLabel(index) {
+      return ["农田空间模型", "风险分区斑块", "路径规划喷洒"][index] || `图 ${index + 1}`;
+    }
+
+    function renderImages(plan) {
+      imageTabs.innerHTML = (plan.images || []).map((img, idx) => `
+        <button class="tab ${idx === 0 ? "active" : ""}" data-idx="${idx}">${imageLabel(idx)}</button>
+      `).join("");
+      const show = (idx) => {
+        const img = plan.images[idx];
+        if (!img) return;
+        mainImage.src = img.url;
+        mainImage.alt = img.name;
+        document.querySelectorAll(".tab").forEach((tab) => {
+          tab.classList.toggle("active", Number(tab.dataset.idx) === idx);
+        });
+      };
+      document.querySelectorAll(".tab").forEach((tab) => {
+        tab.addEventListener("click", () => show(Number(tab.dataset.idx)));
+      });
+      show(0);
+    }
+
+    function renderTables(plan) {
+      taskBody.innerHTML = (plan.tasks || []).slice(0, 14).map((t) => `
+        <tr>
+          <td>${t.task_rank}</td><td>${t.task_id}</td><td>${t.parcel_id}</td>
+          <td>${fmt(t.risk, 3)}</td><td>${fmt(t.confidence, 3)}</td><td>${fmt(t.dose_L_per_ha, 2)}</td>
+        </tr>
+      `).join("");
+      routeBody.innerHTML = (plan.routes || []).map((r) => `
+        <tr>
+          <td>${r.uav_id}</td><td>${r.task_num}</td><td>${fmt(r.route_length_m, 1)}</td><td>${r.task_order}</td>
+        </tr>
+      `).join("");
+      parcelBody.innerHTML = (plan.parcels || []).slice(0, 14).map((p) => `
+        <tr>
+          <td>${p.parcel_id}</td><td>${fmt(p.parcel_area_m2, 0)}</td>
+          <td>${fmt(p.R_vision, 3)}</td><td>${fmt(p.R_total, 3)}</td><td>${p.risk_level}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderPlan(plan) {
+      sourceName.textContent = plan.source_file || "";
+      status.textContent = `已读取 ${plan.parcels.length} 个地块、${plan.tasks.length} 个病害任务点、${plan.routes.length} 条无人机任务路径。`;
+      renderSummary(plan);
+      renderMethod(plan);
+      renderImages(plan);
+      renderTables(plan);
+    }
+
+    async function loadReference() {
+      const res = await fetch("/api/drone/reference");
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        status.textContent = data.message || "读取失败";
+        return;
+      }
+      renderPlan(data.plan);
+    }
+
+    async function savePlan() {
+      saveBtn.disabled = true;
+      saveBtn.textContent = "保存中...";
+      const res = await fetch("/api/drone/plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ use_reference_plan: true }),
+      });
+      const data = await res.json();
+      saveBtn.disabled = false;
+      saveBtn.textContent = "保存方案";
+      if (!res.ok || !data.ok) {
+        alert(data.message || "保存失败");
+        return;
+      }
+      renderPlan(data.plan);
+      loadHistory();
+    }
+
+    async function loadHistory() {
+      const res = await fetch("/api/drone/plans");
+      const data = await res.json();
+      if (!res.ok || !data.ok) return;
+      historyBox.innerHTML = (data.items || []).slice(0, 4).map((item, idx) => `
+        <div class="history-item" data-idx="${idx}">
+          <div class="name">${item.plan_name}</div>
+          <div class="meta">
+            ${new Date(item.ts).toLocaleString()}<br>
+            ${item.crop_type} / ${item.disease_type}<br>
+            风险 ${fmt(item.risk_score, 3)}，${item.risk_level}，喷洒 ${fmt(item.spray_volume_l, 1)} L
+          </div>
+        </div>
+      `).join("") || "<div class='history-item'><div class='meta'>暂无保存记录</div></div>";
+      document.querySelectorAll(".history-item[data-idx]").forEach((el) => {
+        el.addEventListener("click", () => renderPlan(data.items[Number(el.dataset.idx)].plan));
+      });
+    }
+
+    saveBtn.addEventListener("click", savePlan);
+    loadReference();
+    loadHistory();
+  </script>
+</body>
+</html>
